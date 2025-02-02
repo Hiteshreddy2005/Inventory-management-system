@@ -1,0 +1,188 @@
+import tkinter as tk
+from tkinter import messagebox
+
+class InventoryItem:
+    def __init__(self, name, price, quantity):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+    def __str__(self):
+        return f"{self.name} - Price: {self.price}, Quantity: {self.quantity}"
+
+class InventoryManager:
+    def __init__(self):
+        self.inventory = []
+
+    def add_item(self, name, price, quantity):
+        item = InventoryItem(name, price, quantity)
+        self.inventory.append(item)
+
+    def view_items(self):
+        return self.inventory
+
+    def update_item(self, name, new_price, new_quantity):
+        for item in self.inventory:
+            if item.name == name:
+                item.price = new_price
+                item.quantity = new_quantity
+                return True
+        return False
+
+    def buy_item(self, name, quantity):
+        for item in self.inventory:
+            if item.name == name:
+                if item.quantity >= quantity:
+                    item.quantity -= quantity
+                    return True
+                else:
+                    return False
+        return False
+
+class GUIInventoryApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Inventory Management System")
+        self.inventory_manager = InventoryManager()
+        self.initialize_gui()
+
+    def initialize_gui(self):
+        self.label = tk.Label(self.root, text="Inventory Management System", font=("Arial", 14))
+        self.label.pack(pady=10)
+
+        self.add_button = tk.Button(self.root, text="Add Item", command=self.add_item)
+        self.add_button.pack(pady=5)
+
+        self.view_button = tk.Button(self.root, text="View Items", command=self.view_items)
+        self.view_button.pack(pady=5)
+
+        self.update_button = tk.Button(self.root, text="Update Item", command=self.update_item)
+        self.update_button.pack(pady=5)
+
+        self.buy_button = tk.Button(self.root, text="Buy Item", command=self.buy_item)
+        self.buy_button.pack(pady=5)
+
+    def add_item(self):
+        add_window = tk.Toplevel(self.root)
+        add_window.title("Add Item")
+
+        tk.Label(add_window, text="Name:").grid(row=0, column=0)
+        entry_name = tk.Entry(add_window)
+        entry_name.grid(row=0, column=1)
+
+        tk.Label(add_window, text="Price:").grid(row=1, column=0)
+        entry_price = tk.Entry(add_window)
+        entry_price.grid(row=1, column=1)
+
+        tk.Label(add_window, text="Quantity:").grid(row=2, column=0)
+        entry_quantity = tk.Entry(add_window)
+        entry_quantity.grid(row=2, column=1)
+
+        def add():
+            name = entry_name.get()
+            price = entry_price.get()
+            quantity = entry_quantity.get()
+
+            if name and price and quantity:
+                try:
+                    price = float(price)
+                    quantity = int(quantity)
+                    self.inventory_manager.add_item(name, price, quantity)
+                    messagebox.showinfo("Success", f"{name} added to the inventory.")
+                    add_window.destroy()
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter valid price and quantity.")
+            else:
+                messagebox.showerror("Error", "Please fill in all fields.")
+
+        tk.Button(add_window, text="Add", command=add).grid(row=3, columnspan=2, pady=5)
+
+    def view_items(self):
+        view_window = tk.Toplevel(self.root)
+        view_window.title("View Items")
+
+        items = self.inventory_manager.view_items()
+        listbox = tk.Listbox(view_window)
+        listbox.pack(pady=10)
+
+        if not items:
+            listbox.insert(tk.END, "Inventory is empty.")
+        else:
+            for item in items:
+                listbox.insert(tk.END, str(item))
+
+    def update_item(self):
+        update_window = tk.Toplevel(self.root)
+        update_window.title("Update Item")
+
+        tk.Label(update_window, text="Name:").grid(row=0, column=0)
+        entry_name = tk.Entry(update_window)
+        entry_name.grid(row=0, column=1)
+
+        tk.Label(update_window, text="New Price:").grid(row=1, column=0)
+        entry_price = tk.Entry(update_window)
+        entry_price.grid(row=1, column=1)
+
+        tk.Label(update_window, text="New Quantity:").grid(row=2, column=0)
+        entry_quantity = tk.Entry(update_window)
+        entry_quantity.grid(row=2, column=1)
+
+        def update():
+            name = entry_name.get()
+            new_price = entry_price.get()
+            new_quantity = entry_quantity.get()
+
+            if name and new_price and new_quantity:
+                try:
+                    new_price = float(new_price)
+                    new_quantity = int(new_quantity)
+                    if self.inventory_manager.update_item(name, new_price, new_quantity):
+                        messagebox.showinfo("Success", f"{name} updated successfully.")
+                        update_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "Item not found.")
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter valid price and quantity.")
+            else:
+                messagebox.showerror("Error", "Please fill in all fields.")
+
+        tk.Button(update_window, text="Update", command=update).grid(row=3, columnspan=2, pady=5)
+
+    def buy_item(self):
+        buy_window = tk.Toplevel(self.root)
+        buy_window.title("Buy Item")
+
+        tk.Label(buy_window, text="Name:").grid(row=0, column=0)
+        entry_name = tk.Entry(buy_window)
+        entry_name.grid(row=0, column=1)
+
+        tk.Label(buy_window, text="Quantity:").grid(row=1, column=0)
+        entry_quantity = tk.Entry(buy_window)
+        entry_quantity.grid(row=1, column=1)
+
+        def buy():
+            name = entry_name.get()
+            quantity = entry_quantity.get()
+
+            if name and quantity:
+                try:
+                    quantity = int(quantity)
+                    if self.inventory_manager.buy_item(name, quantity):
+                        messagebox.showinfo("Success", f"You bought {quantity} {name}(s).")
+                        buy_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "Product not available or quantity is insufficient.")
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter a valid quantity.")
+            else:
+                messagebox.showerror("Error", "Please fill in all fields.")
+
+        tk.Button(buy_window, text="Buy", command=buy).grid(row=2, columnspan=2, pady=5)
+
+def main():
+    root = tk.Tk()
+    app = GUIInventoryApp(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
